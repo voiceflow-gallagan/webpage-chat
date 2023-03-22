@@ -19,7 +19,7 @@ body, html {
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
-  filter: blur(10px);
+  filter: blur(8px);
   z-index: -2;
   top: -5%;
   left: -5%;
@@ -33,24 +33,45 @@ body, html {
   z-index: -1;
 }
 
+#input-placeholder {
+  position: absolute;
+  bottom: 15%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 300;
+  font-size: 18px;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+
 #input-container {
   position: absolute;
-  bottom: 20%;
+  bottom: 15%;
   left: 50%;
   transform: translate(-50%, 0);
   width: 60%;
   opacity: 0;
-  border-bottom: 0.2px solid rgba(255, 255, 255,0.5);
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.80);
+}
+
+#wave {
+  position: absolute;
+  top: calc(85% - 53.97px); /* Change this line */
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.5s;
 }
 
 #user-input {
   position: absolute;
-  bottom: 20%;
+  bottom: 15%;
   left: 50%;
   font-weight: 300;
   font-family: 'Open Sans', sans-serif;
   transform: translate(-50%, 0);
-  width: 80%;
+  width: 100%;
   background: transparent;
   border: none;
   outline: none;
@@ -64,25 +85,14 @@ body, html {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  max-width: 80%;
+  max-width: 50%;
+  max-height: 50%;
   text-align: center;
   color: rgba(255, 255, 255, 0.90);
   font-weight: 300;
   font-size: 20px;
   opacity: 0;
   transition: opacity 0.8s;
-}
-
-#input-placeholder {
-  position: absolute;
-  bottom: 20%;
-  left: 50%;
-  transform: translate(-50%, 0);
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: 300;
-  font-size: 18px;
-  opacity: 0;
-  transition: opacity 0.5s;
 }
 
 .hidden {
@@ -108,3 +118,13 @@ body, html {
   color: transparent;
 }
 
+@keyframes waveAnimation {
+  0% {
+    transform: translateX(-50%) scale(0.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0;
+  }
+}

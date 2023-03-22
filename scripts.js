@@ -1,15 +1,54 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // Generate a unique ID for the user
+  const uniqueId = generateUniqueId()
+
+  // Set the runtime, version and API key for the Voiceflow Dialog API
+  const voiceflowRuntime = 'general-runtime.voiceflow.com'
+  const voiceflowVersionID =
+    document.getElementById('vfassistant').getAttribute('data-version') ||
+    'production'
+  const voiceflowAPIKey = 'VOICEFLOW_API_KEY'
+
+  let audio = new Audio()
+  const wave = document.getElementById('wave')
   const input = document.getElementById('user-input')
   const responseContainer = document.getElementById('response-container')
   const inputPlaceholder = document.getElementById('input-placeholder')
   const inputFieldContainer = document.getElementById('input-container')
-  let audio = new Audio()
 
-  const uniqueId = generateUniqueId()
-  const unsplashAPIKey = 'YOUR_UNSPLASH_API_KEY'
-  const voiceflowAPIKey = 'YOUR_VOICEFLOW_API_KEY'
-  const voiceflowVersionID = 'development'
-  const voiceflowRuntime = 'general-runtime.voiceflow.com'
+  var instance = new SiriWave({
+    container: document.getElementById('wave'),
+    width: 300,
+    height: 120,
+    autostart: false,
+    curveDefinition: [
+      {
+        attenuation: -2,
+        lineWidth: 0.25,
+        opacity: 0.1,
+      },
+      {
+        attenuation: -6,
+        lineWidth: 0.15,
+        opacity: 0.2,
+      },
+      {
+        attenuation: 4,
+        lineWidth: 0.05,
+        opacity: 0.4,
+      },
+      {
+        attenuation: 2,
+        lineWidth: 0.15,
+        opacity: 0.6,
+      },
+      {
+        attenuation: 1,
+        lineWidth: 0.2,
+        opacity: 0.9,
+      },
+    ],
+  })
 
   inputFieldContainer.addEventListener('click', () => {
     input.focus()
@@ -31,15 +70,17 @@ document.addEventListener('DOMContentLoaded', () => {
   })
 
   // Fetch random background image from Unsplash API
-  fetch(
-    `https://api.unsplash.com/photos/random?query=dark+landscape+nature&client_id=${unsplashAPIKey}`
-  )
-    .then((response) => response.json())
-    .then((data) => {
-      const imageUrl = data.urls.regular
-      document.getElementById(
-        'background'
-      ).style.backgroundImage = `url(${imageUrl})`
+  fetch(`https://source.unsplash.com/random?beautiful+landscape+nature`)
+    .then((response) => {
+      // Check if the request was successful
+      if (response.ok) {
+        // Set the image source to the URL of the random landscape image
+        document.getElementById(
+          'background'
+        ).style.backgroundImage = `url(${response.url})`
+      } else {
+        throw new Error(`HTTP error! Status: ${response.status}`)
+      }
     })
     .catch((error) => {
       console.error('Error fetching Unsplash image:', error)
@@ -48,13 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Hide placeholder on input focus
   input.addEventListener('focus', () => {
     input.style.caretColor = 'transparent'
-    /*
-    if (!inputClicked) {
-      inputClicked = true
-      input.placeholder = ''
-      responseContainer.style.opacity = '0'
-    }
-    */
   })
 
   // Restore placeholder on input blur
@@ -88,8 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
       config: { tts: true, stripSSML: true },
       action: { type: 'text', payload: input },
     }
+
     if (input == '#launch#') {
-      let body = {
+      body = {
         config: { tts: true, stripSSML: true },
         action: { type: 'launch' },
       }
@@ -116,6 +151,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fade out previous content
     responseContainer.style.opacity = '0'
+    wave.style.opacity = '0'
+    instance.start()
 
     setTimeout(() => {
       let content = ''
@@ -151,25 +188,34 @@ document.addEventListener('DOMContentLoaded', () => {
           const imageElement = document.createElement('img')
           imageElement.src = item.payload.image
           imageElement.alt = 'Response image'
-          imageElement.style.borderRadius = '5%'
+          //imageElement.style.borderRadius = '3%'
           imageElement.style.border = '2px solid white'
           imageElement.style.width = 'auto'
           imageElement.style.height = 'auto'
-          imageElement.style.maxWidth = '60%'
+          imageElement.style.maxWidth = '80%'
           imageElement.style.opacity = '0'
+          imageElement.style.boxShadow =
+            '0px 0px 16px 1px rgba(0, 0, 0, 0.1), 0px 0px 16px 1px rgba(0, 0, 0, 0.08)'
+          imageElement.style.cursor = 'pointer'
           responseContainer.appendChild(imageElement)
           imageElement.style.transition = 'opacity 2.5s'
           imageElement.style.opacity = '1'
+          imageElement.addEventListener('click', () => {
+            showModal(item.payload.image)
+          })
         }
       })
 
       // Fade in new content
       responseContainer.style.opacity = '1'
+      wave.style.opacity = '1'
 
       // Function to play audio sequentially
       function playNextAudio() {
         if (audioQueue.length === 0) {
           // Set focus back to the input field after all audios are played
+          wave.style.opacity = '0'
+          instance.stop()
           input.blur()
           setTimeout(() => {
             input.focus()
@@ -226,22 +272,56 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     inputFieldContainer.style.animation = 'fadeIn 4s forwards'
   }, 2500)
+
+  function showModal(imageSrc) {
+    const modal = document.createElement('div')
+    modal.id = 'modal'
+    modal.style.display = 'flex'
+    modal.style.justifyContent = 'center'
+    modal.style.alignItems = 'center'
+    modal.style.position = 'fixed'
+    modal.style.top = '0'
+    modal.style.left = '0'
+    modal.style.width = '100%'
+    modal.style.height = '100%'
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)'
+    modal.style.opacity = '0'
+    modal.style.transition = 'opacity 0.3s ease'
+
+    const modalImage = document.createElement('img')
+    modalImage.src = imageSrc
+    modalImage.style.maxWidth = '90%'
+    modalImage.style.maxHeight = '90%'
+    modalImage.style.border = '2px solid white'
+    modalImage.style.boxShadow =
+      '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)'
+
+    modal.appendChild(modalImage)
+    document.body.appendChild(modal)
+
+    setTimeout(() => {
+      modal.style.opacity = '1'
+    }, 100)
+
+    modal.addEventListener('click', () => {
+      modal.style.opacity = '0'
+      setTimeout(() => {
+        document.body.removeChild(modal)
+      }, 300)
+    })
+  }
 })
 
 function generateUniqueId() {
   // generate a random string of 6 characters
   const randomStr = Math.random().toString(36).substring(2, 8)
-
   // get the current date and time as a string
   const dateTimeStr = new Date().toISOString()
-
   // remove the separators and milliseconds from the date and time string
   const dateTimeStrWithoutSeparators = dateTimeStr
     .replace(/[-:]/g, '')
     .replace(/\.\d+/g, '')
-
   // concatenate the random string and date and time string
   const uniqueId = randomStr + dateTimeStrWithoutSeparators
-
   return uniqueId
 }
