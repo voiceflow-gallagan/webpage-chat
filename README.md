@@ -15,8 +15,9 @@ This is also where we are setting the data-version attribute we then use in our 
 - **scripts.js**: This file contains the JavaScript code for handling the interaction with the Voiceflow Dialog API, set a random image to use it as a background, and rendering the responses on the webpage. This is also in this file that we set the Dialog API key.
 
 - **siriwave.umd.min.js**: This file contains the JavaScript code for generating the wave animation when we play audio.
-
 [GitHub - kopiro/siriwave: The Apple® Siri wave-form replicated in a JS library.](https://github.com/kopiro/siriwave)
+
+- **/images**: Directory with all the images for the background.
 
 
 ### Dialog API Usage in script.js
