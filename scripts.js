@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const voiceflowVersionID =
     document.getElementById('vfassistant').getAttribute('data-version') ||
     'production'
-  const voiceflowAPIKey = 'VOICEFLOW_API_KEY'
+  const voiceflowAPIKey = 'YOUR_DIALOG_API_KEY'
 
   let audio = new Audio()
   const wave = document.getElementById('wave')
@@ -69,12 +69,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })
 
-  // Fetch random background image from Unsplash API
+  // Fetch random background image from Unsplash
   fetch(`https://source.unsplash.com/random?beautiful+landscape+nature`)
     .then((response) => {
       // Check if the request was successful
       if (response.ok) {
-        // Set the image source to the URL of the random landscape image
+        // Set the image URL for the background
         document.getElementById(
           'background'
         ).style.backgroundImage = `url(${response.url})`
@@ -111,18 +111,22 @@ document.addEventListener('DOMContentLoaded', () => {
         // Check if any audio is currently playing
         if (audio && !audio.paused) {
           // If audio is playing, pause it
+          wave.style.opacity = '0'
           audio.pause()
         }
         interact(userInput)
       }
     }
   })
+
+  // Send user input to Voiceflow Dialog API
   async function interact(input) {
     let body = {
       config: { tts: true, stripSSML: true },
       action: { type: 'text', payload: input },
     }
 
+    // If input is #launch# > Use a launch action to the request body
     if (input == '#launch#') {
       body = {
         config: { tts: true, stripSSML: true },
@@ -143,11 +147,15 @@ document.addEventListener('DOMContentLoaded', () => {
       .then((data) => {
         displayResponse(data)
       })
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        // console.error(err)
+        displayResponse(null)
+      })
   }
 
+  // Render the response from the Voiceflow Dialog API
   function displayResponse(response) {
-    console.log(response)
+    console.log('Dialog API Response:', response)
 
     // Fade out previous content
     responseContainer.style.opacity = '0'
@@ -164,54 +172,65 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Fetch VF DM API response
-      response.forEach((item) => {
-        if (item.type === 'speak') {
-          if (item.payload.type === 'message') {
+      if (response) {
+        response.forEach((item) => {
+          if (item.type === 'speak') {
+            console.info('Speak Step')
+            if (item.payload.type === 'message') {
+              const textElement = document.createElement('p')
+              textElement.textContent = item.payload.message
+              textElement.setAttribute('data-src', item.payload.src)
+              textElement.style.opacity = '0'
+              responseContainer.appendChild(textElement)
+            }
+            // Add audio to the queue
+            audioQueue.push(item.payload.src)
+          } else if (item.type === 'text') {
+            console.info('Text Step')
             const textElement = document.createElement('p')
             textElement.textContent = item.payload.message
-            textElement.setAttribute('data-src', item.payload.src)
             textElement.style.opacity = '0'
             responseContainer.appendChild(textElement)
+            textElement.style.transition = 'opacity 0.5s'
+            textElement.style.opacity = '1'
+          } else if (item.type === 'visual') {
+            console.info('Image Step')
+            const imageElement = document.createElement('img')
+            imageElement.src = item.payload.image
+            imageElement.alt = 'Assistant Image'
+            //imageElement.style.borderRadius = '3%'
+            imageElement.style.border = '2px solid white'
+            imageElement.style.width = 'auto'
+            imageElement.style.height = 'auto'
+            imageElement.style.maxWidth = '80%'
+            imageElement.style.opacity = '0'
+            imageElement.style.boxShadow =
+              '0px 0px 16px 1px rgba(0, 0, 0, 0.1), 0px 0px 16px 1px rgba(0, 0, 0, 0.08)'
+            imageElement.style.cursor = 'pointer'
+            responseContainer.appendChild(imageElement)
+            imageElement.style.transition = 'opacity 2.5s'
+            imageElement.style.opacity = '1'
+            imageElement.addEventListener('click', () => {
+              showModal(item.payload.image)
+            })
           }
-          // Add audio to the queue
-          audioQueue.push(item.payload.src)
-        } else if (item.type === 'text') {
-          console.info('Text')
-          const textElement = document.createElement('p')
-          textElement.textContent = item.payload.message
-          textElement.style.opacity = '0'
-          responseContainer.appendChild(textElement)
-          textElement.style.transition = 'opacity 0.5s'
-          textElement.style.opacity = '1'
-        } else if (item.type === 'visual') {
-          console.info('Image')
-          const imageElement = document.createElement('img')
-          imageElement.src = item.payload.image
-          imageElement.alt = 'Response image'
-          //imageElement.style.borderRadius = '3%'
-          imageElement.style.border = '2px solid white'
-          imageElement.style.width = 'auto'
-          imageElement.style.height = 'auto'
-          imageElement.style.maxWidth = '80%'
-          imageElement.style.opacity = '0'
-          imageElement.style.boxShadow =
-            '0px 0px 16px 1px rgba(0, 0, 0, 0.1), 0px 0px 16px 1px rgba(0, 0, 0, 0.08)'
-          imageElement.style.cursor = 'pointer'
-          responseContainer.appendChild(imageElement)
-          imageElement.style.transition = 'opacity 2.5s'
-          imageElement.style.opacity = '1'
-          imageElement.addEventListener('click', () => {
-            showModal(item.payload.image)
-          })
-        }
-      })
+        })
+      } else {
+        console.info('Error')
+        const textElement = document.createElement('p')
+        textElement.textContent = `Sorry, GPT took too long to respond.\n\nPlease try again.`
+        textElement.style.opacity = '0'
+        responseContainer.appendChild(textElement)
+        textElement.style.transition = 'opacity 0.5s'
+        textElement.style.opacity = '1'
+      }
 
       // Fade in new content
       responseContainer.style.opacity = '1'
-      wave.style.opacity = '1'
 
       // Function to play audio sequentially
       function playNextAudio() {
+        wave.style.opacity = '1'
         if (audioQueue.length === 0) {
           // Set focus back to the input field after all audios are played
           wave.style.opacity = '0'
@@ -273,6 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
     inputFieldContainer.style.animation = 'fadeIn 4s forwards'
   }, 2500)
 
+  // Modal to show Image
   function showModal(imageSrc) {
     const modal = document.createElement('div')
     modal.id = 'modal'
@@ -312,6 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })
 
+// Function to generate a unique ID for the user
 function generateUniqueId() {
   // generate a random string of 6 characters
   const randomStr = Math.random().toString(36).substring(2, 8)
