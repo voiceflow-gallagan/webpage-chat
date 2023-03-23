@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const voiceflowVersionID =
     document.getElementById('vfassistant').getAttribute('data-version') ||
     'production'
-  const voiceflowAPIKey = 'YOUR_DIALOG_API_KEY'
+  const voiceflowAPIKey = 'VOICEFLOW_DIALOG_API_KEY'
 
   let audio = new Audio()
   const wave = document.getElementById('wave')
@@ -69,22 +69,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })
 
-  // Fetch random background image from Unsplash
-  fetch(`https://source.unsplash.com/random?beautiful+landscape+nature`)
-    .then((response) => {
-      // Check if the request was successful
-      if (response.ok) {
-        // Set the image URL for the background
-        document.getElementById(
-          'background'
-        ).style.backgroundImage = `url(${response.url})`
-      } else {
-        throw new Error(`HTTP error! Status: ${response.status}`)
-      }
-    })
-    .catch((error) => {
-      console.error('Error fetching Unsplash image:', error)
-    })
+  const imagesList = [
+    'pawel-czerwinski-SVVCP23JFyg-unsplash.jpg',
+    'pawel-czerwinski-vI5XwPbGvmY-unsplash.jpg',
+    'pawel-czerwinski-83y-Ud-UHoo-unsplash.jpg',
+    'pawel-czerwinski-eiKm9AmXxZo-unsplash.jpg',
+    'pawel-czerwinski-iQcqqTBxMFk-unsplash.jpg',
+    'pawel-czerwinski-db2y7AD7s7M-unsplash.jpg',
+    'pawel-czerwinski-WZWxuwX-ce4-unsplash.jpg',
+    'pawel-czerwinski-keVhq8uU23M-unsplash.jpg',
+    'pawel-czerwinski-Ulbtb_46xlc-unsplash.jpg',
+    'pawel-czerwinski-FAlYVtV1kRg-unsplash.jpg',
+  ]
+
+  // Load a random background from the imagesList array
+  function getRandomImage() {
+    const randomIndex = Math.floor(Math.random() * imagesList.length)
+    return imagesList[randomIndex]
+  }
+
+  const background = document.getElementById('background')
+  background.style.backgroundImage = `url('./images/${getRandomImage()}')`
+  background.style.opacity = '1'
+  const credits = document.getElementById('credits')
+  const by = document.createElement('p')
+  by.innerHTML =
+    'Photo by <a href="https://unsplash.com/@pawel_czerwinski?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Pawel Czerwinski</a> on <a href="https://unsplash.com/wallpapers?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a>'
+  credits.appendChild(by)
+  credits.style.opacity = '0.6'
+  document.getElementById('overlay').style.opacity = '0.8'
 
   // Hide placeholder on input focus
   input.addEventListener('focus', () => {
