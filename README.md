@@ -4,6 +4,7 @@
 
 To start with this project, you will need your Voiceflow assistant Dialog API key as this key is needed each time you want to make a request to the /interact endpoint.
 
+[Loom Video](https://www.loom.com/share/3a5ae6073e674c6fbcafb81bf39e4b30)
 
 ### Project Structure
 
