@@ -61,7 +61,7 @@ body, html {
 
 #wave {
   position: absolute;
-  top: calc(85% - 53.97px); /* Change this line */
+  top: calc(85% - 53.97px);
   left: 50%;
   transform: translateX(-50%);
   opacity: 0;
